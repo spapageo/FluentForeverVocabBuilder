@@ -9,6 +9,7 @@ from config import Config
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.config.from_pyfile('../settings.cfg')
 app.config["web_driver"] = web_driver.WebDriver(app.config["TEMP_DIR"])
 
 def cleanup(drv):
