@@ -48,20 +48,17 @@ function search() {
         function (data) {
             $(".container").append(data);
             searchImages(word_query, language, true);
+            searchSentences(word_query, language);
             $(".search-spinner").addClass("d-none");
         }
     );
 }
-
-var pageNumber = 0;
 
 /**
  * Search Google Images for query.
  * Query inherited by main word query, but can be overridden.
  * @param {?string} query - The Google Images search query.
  * @param {?string} language - Current language setting.
- * @param {boolean} loadFirstPage - True if this the first time searching the query.
- *   False if "Load More Images" is clicked.
  */
 function searchImages(query, language, loadFirstPage) {
     if (!query) {
@@ -73,38 +70,20 @@ function searchImages(query, language, loadFirstPage) {
         language = $("select#language").val();
     }
 
-    if (loadFirstPage) {
-        $(".image-search-result-spinner").removeClass("d-none");
-        $(".gallery img, .load-more").remove();
-        pageNumber = 0;
-    } else {
-        $(".image-search-more-spinner").removeClass("d-none");
-    }
+    $(".gallery img").remove();
+    $(".image-search-result-spinner").removeClass("d-none");
 
     $.get("/search-images",
         {
             word_query: query,
             language, language,
-            page: pageNumber++
         },
         function (data) {
-            $(".load-more").remove();
             $(".image-search-label-spinner").addClass("d-none");
             $(".image-search-result-spinner").addClass("d-none");
-            $(".image-search-more-spinner").addClass("d-none");
-
-            $("<button/>")
-                .html("Load more images" +
-                    '<div class="spinner-border spinner-border-sm image-search-more-spinner ml-2 d-none" role="status">' +
-                        '<span class="sr-only">Loading more images...</span>' +
-                    '</div>')
-                .attr("type", "button")
-                .addClass("load-more btn btn-link")
-                .on("click", searchImages.bind(this, query, language, false))
-                .appendTo(".gallery");
 
             data.forEach(function (link) {
-                $("<img/>").attr("src", link).addClass("img-thumbnail").insertBefore(".load-more");
+                $("<img/>").attr("src", link).addClass("img-thumbnail").appendTo(".gallery");
             });
 
             waitForSelectedGallery();
@@ -156,9 +135,51 @@ function add() {
 
 
 function imgSearchWatch() {
-    $("body").on("click", ".btn-image-search", function() {
-        searchImages(null, null , true);
+    $("body").on("click", ".btn-image-search", function () {
+        searchImages(null, null, true);
     });
+}
+
+/**
+ * Search sentences for query.
+ * Query inherited by main word query, but can be overridden.
+ * @param {?string} query
+ * @param {?string} language
+ */
+function searchSentences(query, language) {
+    console.log("Searching for sentences...")
+    if (!query) {
+        query = $("input#sentence_query").val();
+    }
+
+    if (!language) {
+        language = $("select#language").val();
+    }
+
+    $.get("/search-sentences",
+        {
+            word_query: query,
+            language, language,
+        }).done(function (data) {
+            $("#sentence_examples").empty();
+            for (var i = 0; i < data.length; i++) {
+                var example = data[i];
+                var option = $('<option></option>').attr("value", example).text(example);
+                $("#sentence_examples").append(option);
+            }
+        });
+}
+
+function sentenceSearchWatch() {
+    console.log('Registering sentence on-click handler');
+    $("body").on("click", ".btn-sentence-search", function () {
+        searchSentences(null, null);
+    });
+
+    $("body").on('change', '#sentence_examples', function () {
+        $("#sentence").attr("value", this.value);
+        $("#sentence_blanked").attr("value", this.value.replace($("input#sentence_query").val(), '__'));
+    })
 }
 
 /**
@@ -259,5 +280,6 @@ $(document).ready(function () {
     populateDefaults();
     imgSearchWatch();
     imgSelectWatch();
+    sentenceSearchWatch();
     enterWatch();
 });

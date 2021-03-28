@@ -11,6 +11,24 @@
 
     {{ render_field(form.word_usage) }}
 
+    <label class="form-control-label" for="sentence_query">{{ form.sentence_query.label }}</label>
+    <div class="d-flex">
+        <input type="text" class="form-control w-26" id="sentence_query" name="sentence_query" value="{{ form.sentence_query.data }}">
+        <button class="btn btn-outline-success ml-3 btn-sentence-search" type="button">
+            Search Sentences
+        </button>
+    </div>
+
+    <label class="form-control-label" for="sentence_examples">Sentence example</label>
+    <select class="form-control w-26" id="sentence_examples" name="sentence_examples">
+    </select>
+
+    <label class="form-control-label" for="sentence">Sentence</label>
+    <input type="text" class="form-control w-26" id="sentence" name="sentence" value="">
+
+    <label class="form-control-label" for="sentence_blanked">Sentence Blanked</label>
+    <input type="text" class="form-control w-26" id="sentence_blanked" name="sentence_blanked" value="">
+
     <label class="form-control-label" for="image_query">{{ form.image_query.label }}</label>
     <div class="d-flex">
         <input type="text" class="form-control w-25" id="image_query" name="image_query" value="{{ form.image_query.data }}">

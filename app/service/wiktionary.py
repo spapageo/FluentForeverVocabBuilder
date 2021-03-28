@@ -21,7 +21,14 @@ def download_audio(url):
 
 def search(query, language):
     parser.set_default_language(language)
-    query = parser.fetch(query)[0]
+    parser_result = parser.fetch(query)
+    if len(parser_result) == 0:
+            return {
+                "ipa": "",
+                "audio_filename": "",
+                "definitions": ""
+            }
+    query = parser_result[0]
     pronunciation = query["pronunciations"]
     if len(pronunciation["text"]):
         ipa = pronunciation["text"][0].replace("IPA: ", "")

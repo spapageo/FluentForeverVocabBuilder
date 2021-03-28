@@ -3,12 +3,14 @@ import os
 
 class Config(object):
     SECRET_KEY = "fluent-forever"
-    GOOGLE_IMAGES_LANGUAGE = "French"
     WIKTIONARY_LANGUAGE = "french"
-    NUM_GOOGLE_IMAGES = 5
+    NUM_IMAGES = 20 
     TEMP_DIR = os.path.join(os.getcwd(), "app", "temp")
     MAX_IMAGE_SIZE = (400, 400)
     SIMPLE_WORDS_NOTE_TYPE = "2. Picture Words"
+    SENTENCE_NOTE_TYPE = "2. French Vocabulary Card Type"
+    FORVO_USERNAME = ""
+    FORVO_PASSWORD = ""
     AVAILABLE_LANGUAGES = [
         "Arabic",
         "Chinese",

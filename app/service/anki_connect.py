@@ -90,3 +90,51 @@ class AnkiConnect:
 
         note_id = self.invoke("addNote", params)
         return note_id
+
+
+    def add_sentence_note(self, deck_name, word, image_paths, word_usage, notes, recording_file_path, ipa_text, test_spelling, sentence, sentence_blanked):
+        stored_images = []
+        for i, image_path in enumerate(image_paths):
+            stored_images.append(self.store_media_file(image_path, "{}-{}".format(word, i)))
+
+        picture_field = ""
+        for stored_image in stored_images:
+            picture_field += '<img src="{}">'.format(stored_image)
+
+        if word_usage:
+            escaped_gender_text = html.escape(word_usage.replace("&", "&amp;"))
+        else:
+            escaped_gender_text = ""
+        formatted_notes = self.format_notes(notes)
+        gender_notes_field = escaped_gender_text + formatted_notes
+
+        pronunciation_field = ipa_text
+
+        if recording_file_path:
+            stored_audio_filename = self.store_media_file(recording_file_path, word)
+            pronunciation_field += "[sound:{}]".format(stored_audio_filename)
+
+        test_spelling = 'y' if test_spelling else ''
+
+        params = {
+            "note": {
+                "deckName": deck_name,
+                "modelName": cfg["SENTENCE_NOTE_TYPE"],
+                "fields": {
+                    "Word": word,
+                    "Sentence Blanked": sentence_blanked,
+                    "Picture": picture_field,
+                    "Sentence": sentence + '<br/>' +gender_notes_field,
+                    "Recording": pronunciation_field,
+                    "Test Reverse": test_spelling
+                },
+                "tags": []
+            }
+        }
+
+        note_id = self.invoke("addNote", params)
+        return note_id
+
+
+    def sync(self):
+        self.invoke("sync")

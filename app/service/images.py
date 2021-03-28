@@ -5,11 +5,14 @@ from tempfile import NamedTemporaryFile
 from mimetypes import guess_extension
 import base64
 from typing import List
+from time import time as timer
+from multiprocessing.pool import ThreadPool
 
 from PIL import Image
-from google_images_download import google_images_download
-
+from bing_images import bing
 from app import app
+import requests
+import shutil
 
 cfg = app.config
 
@@ -17,26 +20,60 @@ cwd = os.getcwd()
 save_path_pat = r".*(temp.*)"
 
 
-def download_images(query: str, page: int, language=None) -> List[str]:
-    response = google_images_download.googleimagesdownload()
 
-    num_images = cfg["NUM_GOOGLE_IMAGES"]
-    end = num_images * (page + 1)
-    offset = num_images * page
-    if page > 0:
-        offset += 1
+def download_image(url, path):
+    try:
+        r = requests.get(url, stream=True, timeout=(1, 1))
+        if r.status_code == 200:
+            with open(path, 'wb') as f:
+                r.raw.decode_content = True
+                shutil.copyfileobj(r.raw, f)
+    except:
+        return
 
-    args = {
-        "keywords": query,
-        "language": language or cfg["GOOGLE_IMAGES_LANGUAGE"],
-        "output_directory": cfg["TEMP_DIR"],
-        "limit": end,
-        "format": "jpg",
-        "offset": offset
-    }
+def download_image_with_thread(entry):
+    url, path, index = entry
+    print("Downloading image #{} from {}".format(index, url))
+    download_image(url, path)
+    return index
 
-    paths = response.download(args)
-    relative_paths = [re.findall(save_path_pat, p)[0].replace(os.sep, '/') for p in paths[query] if p]
+
+def download_images_from_bing(
+    query: str,
+    limit: int,
+    output_dir: str,
+    pool_size: int = 20,
+    adult: bool = True,
+    file_type: str = '',
+    filters: str = '',
+    force_replace=False
+):
+    urls = bing.fetch_image_urls(query, limit, adult, file_type, filters)
+    index = 1
+    entries = []
+    for url in urls:
+        name = bing.file_name(url, index, query)
+        path = os.path.join(output_dir, name)
+        entries.append((url, path, index))
+        index += 1
+
+    start = timer()
+
+    ps = pool_size
+    if limit < pool_size:
+        ps = limit
+    results = ThreadPool(ps).imap_unordered(
+        download_image_with_thread, entries)
+
+    print("Done")
+    elapsed = timer() - start
+    print("Elapsed Time: %.2fs" % elapsed)
+    return [entries[index - 1][1] for index in results]
+
+def download_images(query: str, language=None) -> List[str]:
+    paths = download_images_from_bing(query, limit=cfg["NUM_IMAGES"], output_dir=cfg["TEMP_DIR"])
+    print(paths)
+    relative_paths = [re.findall(save_path_pat, p)[0].replace(os.sep, '/') for p in paths if p]
     return relative_paths
 
 

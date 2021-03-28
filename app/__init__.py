@@ -2,11 +2,19 @@ import os
 
 from flask import Flask
 from flask_bootstrap import Bootstrap
+from app.service import web_driver
+import atexit
 
 from config import Config
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.config["web_driver"] = web_driver.WebDriver(app.config["TEMP_DIR"])
+
+def cleanup(drv):
+    drv.driver_cleanup()
+
+atexit.register(cleanup, drv=app.config["web_driver"])
 
 bootstrap = Bootstrap(app)
 

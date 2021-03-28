@@ -14,6 +14,7 @@ class AnkiForm(FlaskForm):
     ipa = StringField("IPA")
     word_usage = SelectField("Word Usage")
     image_query = StringField("Image Query")
+    sentence_query = StringField("Sentence Query")
     notes = TextAreaField("Notes")
     test_spelling = BooleanField("Test Spelling?")
     submit = SubmitField("Add to Anki")
